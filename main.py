@@ -27,7 +27,7 @@ def tuple2str(kv):
 
 
 def sanitize_word(w):
-    to_remove = [',', '.', '-']
+    to_remove = [',', '.', '-', ':']
     for t in to_remove:
         w = w.replace(t, '')
 
