@@ -26,6 +26,15 @@ def tuple2str(kv):
     return "%s,%d" % (k, v)
 
 
+def sanitize_word(w):
+    to_remove = [',', '.', '-']
+    for t in to_remove:
+        w = w.replace(t, '')
+
+    w = w.lower()
+    return w
+
+
 def main():
     parser = argparse.ArgumentParser(description="Nuestro primer pipeline con Beam")
     parser.add_argument("--entrada", help="Fichero de entrada")
@@ -48,7 +57,11 @@ def run_pipeline(args, beam_args):
     with beam.Pipeline(options=opts) as p:
         lines: PCollection[str] = p | "Leer fichero entrada" >> beam.io.ReadFromText(input_file)
         words: PCollection[str] = lines | "Separa palabras" >> beam.FlatMap(lambda l: l.split())
-        counted_words: PCollection[Tuple[str, int]] = words | "Cuenta palabras" >> beam.combiners.Count.PerElement()
+
+        # Add clean words after running in Dataflow for the first time
+        clean_words = words | "Sanitiza" >> beam.Map(sanitize_word)
+        counted_words: PCollection[Tuple[str, int]] = clean_words \
+                                                      | "Cuenta palabras" >> beam.combiners.Count.PerElement()
         top_words = counted_words | "Top %d" % n_words >> beam.combiners.Top.Of(
             n_words,
             key=lambda kv: kv[1]
