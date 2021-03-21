@@ -9,7 +9,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 
 def tuple2str(kv):
     k, v = kv
-    return"%s,%d" % (k, v)
+    return "%s,%d" % (k, v)
 
 
 def main():
@@ -35,12 +35,14 @@ def run_pipeline(args, beam_args):
         lines: PCollection[str] = p | "Leer fichero entrada" >> beam.io.ReadFromText(input_file)
         words: PCollection[str] = lines | "Separa palabras" >> beam.FlatMap(lambda l: l.split())
         counted_words: PCollection[Tuple[str, int]] = words | "Cuenta palabras" >> beam.combiners.Count.PerElement()
-        top_words = counted_words | "Top 10" >> beam.combiners.Top.Of(
+        top_words = counted_words | "Top %d" % n_words >> beam.combiners.Top.Of(
             n_words,
             key=lambda kv: kv[1]
         )
 
-        formatted = top_words | beam.FlatMap(lambda x: x) | "Formatea" >> beam.Map(tuple2str)
+        formatted = top_words \
+                    | "Desenvuelve lista" >> beam.FlatMap(lambda x: x) \
+                    | "Formatea" >> beam.Map(tuple2str)
         formatted | beam.io.WriteToText(output_file)
 
         if show_output:
