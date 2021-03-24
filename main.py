@@ -68,6 +68,5 @@ def run_pipeline(custom_args, beam_args):
     formateado | beam.io.WriteToText(salida)
 
 
-
 if __name__ == '__main__':
   main()
