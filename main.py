@@ -55,17 +55,17 @@ def run_pipeline(custom_args, beam_args):
   opts = PipelineOptions(beam_args)
 
   with beam.Pipeline(options=opts) as p:
-    lineas: PCollection[str] = p | beam.io.ReadFromText(entrada)
+    lineas: PCollection[str] = p | "Leemos entrada" >> beam.io.ReadFromText(entrada)
     # "En un lugar de La Mancha" --> ["En", "un", ...], [...], [...] --> "En", "un", "lugar", ....
-    palabras = lineas | beam.FlatMap(lambda l: l.split())
-    limpiadas = palabras | beam.Map(sanitizar_palabra)
-    contadas: PCollection[Tuple[str, int]] = limpiadas | beam.combiners.Count.PerElement()
+    palabras = lineas | "Pasamos a palabras" >> beam.FlatMap(lambda l: l.split())
+    limpiadas = palabras | "Sanitizamos" >> beam.Map(sanitizar_palabra)
+    contadas: PCollection[Tuple[str, int]] = limpiadas  | "Contamos" >> beam.combiners.Count.PerElement()
     # "En" -> ("En", 17)
     # "un" -> ("un", 28)
-    palabras_top_lista = contadas | beam.combiners.Top.Of(n_palabras, key=lambda kv: kv[1])
-    palabras_top = palabras_top_lista | beam.FlatMap(lambda x: x)
-    formateado: PCollection[str] = palabras_top | beam.Map(lambda kv: "%s,%d" % (kv[0], kv[1]))
-    formateado | beam.io.WriteToText(salida)
+    palabras_top_lista = contadas | "Ranking" >> beam.combiners.Top.Of(n_palabras, key=lambda kv: kv[1])
+    palabras_top = palabras_top_lista | "Desenvuelve lista" >> beam.FlatMap(lambda x: x)
+    formateado: PCollection[str] = palabras_top | "Formateamos" >> beam.Map(lambda kv: "%s,%d" % (kv[0], kv[1]))
+    formateado | "Escribimos salida" >> beam.io.WriteToText(salida)
 
 
 if __name__ == '__main__':
