@@ -35,14 +35,14 @@ def run_pipeline(custom_args, beam_args):
 
   opts = PipelineOptions(beam_args)
 
-  with beam.Pipeline(opts) as p:
+  with beam.Pipeline(options=opts) as p:
     lineas: PCollection[str] = p | beam.io.ReadFromText(entrada)
     # "En un lugar de La Mancha" --> ["En", "un", ...], [...], [...] --> "En", "un", "lugar", ....
     palabras = lineas | beam.FlatMap(lambda l: l.split())
     contadas: PCollection[Tuple[str, int]] = palabras | beam.combiners.Count.PerElement()
     # "En" -> ("En", 17)
     # "un" -> ("un", 28)
-    palabras_top = contadas | beam.combiners.Top.Of(5, keys=lambda kv: kv[1])
+    palabras_top = contadas | beam.combiners.Top.Of(5, key=lambda kv: kv[1])
     palabras_top | beam.Map(print)
 
 
