@@ -23,6 +23,7 @@ def main():
     parser = argparse.ArgumentParser(description="This is our first pipeline in Beam")
     parser.add_argument("--input", help="Input text location")
     parser.add_argument("--output", help="Output result location")
+    parser.add_argument("--n-words", type=int, help="Number of words in output", default=50)
 
     our_args, dataflow_args = parser.parse_known_args()
     run_pipeline(our_args, dataflow_args)
@@ -41,8 +42,20 @@ def format_output(sorted_words):
     return output_str
 
 
+def sanitize_word(w):
+    to_remove = ['.', ',', '-', ';', ':']
+    for t in to_remove:
+        w = w.replace(t, '')
+
+    w = w.lower()
+
+    return w
+
+
 def run_pipeline(custom_args, runner_args):
     input_location = custom_args.input
+    output_location = custom_args.output
+    n_words = custom_args.n_words
 
     opts = PipelineOptions(runner_args)
 
@@ -52,15 +65,18 @@ def run_pipeline(custom_args, runner_args):
         # PColl("hello all how are you doing") =>PColl(["hello", "all", ...]) => PColl("hello", "all", ...)
         words: PCollection[str] = lines | "Split into words" >> beam.FlatMap(lambda line: line.split())
 
-        # Output: (word, N)
-        counted_words = words | "Count words" >> beam.combiners.Count.PerElement()
+        sanitized = words | "Sanitize words" >> beam.Map(sanitize_word)
 
-        top50 = counted_words | "Top 50" >> beam.combiners.Top.Of(
-            50,
+        # Output: (word, N)
+        counted_words = sanitized | "Count words" >> beam.combiners.Count.PerElement()
+
+        top_n = counted_words | "Top %d" % n_words >> beam.combiners.Top.Of(
+            n_words,
             key=lambda t: t[1]
         )
 
-        top50 | beam.Map(format_output) | beam.Map(print)
+        output_str = top_n | "Format output" >> beam.Map(format_output)
+        output_str | "Write output" >> beam.io.WriteToText(output_location)
 
 
 if __name__ == '__main__':
