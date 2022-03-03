@@ -11,7 +11,7 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-from typing import List
+from typing import List, Tuple
 
 import apache_beam as beam
 import argparse
@@ -48,7 +48,7 @@ def sanitizar_palabra(palabra: str) -> str:
     return palabra
 
 
-def lista_a_csv(l: List[(str, int)]) -> str:
+def lista_a_csv(l: List[Tuple[str, int]]) -> str:
     csv = ""
     for e in l:
         csv += f"{e[0]},{e[1]}\n"
