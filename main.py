@@ -61,7 +61,7 @@ def run_pipeline(my_args, dataflow_args):
 
     input_file = my_args.fichero_entrada
     output_file = my_args.fichero_salida
-    num_palabras = my_args.num_palabras
+    num_palabras = int(my_args.num_palabras)
 
     with beam.pipeline.Pipeline(options=opts) as p:
         # entrada | "etiqueta" >> transform()
@@ -77,7 +77,7 @@ def run_pipeline(my_args, dataflow_args):
         # ("en", 7), ("sancho", 20), ("dulcinea", ???), ("mancha", 14)
         contadas = palabras_limpias | "Contar" >> beam.combiners.Count.PerElement()
 
-        top_palabras = contadas | "Top" >> beam.combiners.Top.Of(num_palabras)
+        top_palabras = contadas | "Top palabras" >> beam.combiners.Top.Of(num_palabras)
         lineas_csv: PCollection[str] = top_palabras | "A CSV" >> beam.Map(lista_a_csv)
         lineas_csv | "Escribir salida" >> beam.io.WriteToText(output_file)
 
