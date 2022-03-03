@@ -32,7 +32,7 @@ def main():
 
 
 def sanitizar_palabra(palabra: str) -> str:
-    quitar = [",", ".", "?", "!", "-", "_"]
+    quitar = [",", ".", "?", "!", "-", "_", "¿", "¡"]
     for c in quitar:
         if c in palabra:
             palabra = palabra.replace(c, '')
